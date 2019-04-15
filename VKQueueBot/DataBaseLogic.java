@@ -1,101 +1,80 @@
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DataBaseLogic {
-  Connection conn = null;
+  private static final String SRV_URL = "jdbc:mysql://" + GetPrivateData.accessData.get("dataBaseAddr") + "/" +
+          GetPrivateData.accessData.get("dataBaseName") + "?serverTimezone=Europe/Moscow";
+  private static final String SQL_GET = "SELECT * FROM queue_main";
 
-  private void DBConnect() throws SQLException {
+
+  private Connection DBConnect() throws CustomException {
+    Connection conn = null;
 
     try {
       conn = DriverManager.getConnection(
-              "jdbc:mysql://your.server.ru/dbName?serverTimezone=Europe/Moscow",
-              "login", "password");
+              SRV_URL,
+              GetPrivateData.accessData.get("dataBaseLogin"),
+              GetPrivateData.accessData.get("dataBasePassword")
+      );
 
       if (conn == null) {
         System.out.println("Нет соединения с БД!");
-        System.exit(0);
+        throw (new CustomException("Нет соединения с БД!"));
       }
+
 
     } catch (SQLException e) {
       e.printStackTrace();
     }
+    return conn;
   }
 
-  public ArrayList<String> DBGet() throws SQLException {
-    ArrayList<String> queue = new ArrayList<String>();
+  public List<String> DBGet() {
+    List<String> queue = new ArrayList<String>();
     try {
+      Connection conn = DBConnect();
 
-
-      DBConnect();
-
-      Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery("SELECT * FROM queue_main");
-
-
+      PreparedStatement ps = conn.prepareStatement(SQL_GET);
+      ResultSet rs = ps.executeQuery();
 
       while (rs.next()) {
         queue.add(rs.getString("ID"));
       }
+      ps.close();
 
-      /**
-       * stmt.close();
-       * При закрытии Statement автоматически закрываются
-       * все связанные с ним открытые объекты ResultSet
-       */
-      stmt.close();
-
-    } catch (SQLException e) {
+    } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
     }
+
     return queue;
   }
 
-  public void DBInsert(Long ID) throws SQLException {
+  public void DBInsert(long ID) {
     try {
-      DBConnect();
-      Statement stmt = conn.createStatement();
-      stmt.executeUpdate("INSERT INTO queue_main(ID) VALUES ('"+ID.toString()+"')");
+      Connection conn = DBConnect();
 
-      /**
-       * stmt.close();
-       * При закрытии Statement автоматически закрываются
-       * все связанные с ним открытые объекты ResultSet
-       */
-      stmt.close();
+      PreparedStatement ps = conn.prepareStatement("INSERT INTO queue_main(ID) VALUES (?)");
+      ps.setLong(1, ID);
+      ps.executeUpdate();
+      ps.close();
 
-    } catch (SQLException e) {
+    } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
     }
   }
 
-  public void DBDel(String ID) throws SQLException {
+
+  public void DBDel(String ID) {
     try {
-      DBConnect();
-      Statement stmt = conn.createStatement();
-      stmt.executeUpdate("DELETE FROM queue_main WHERE ID='"+ID+"'");
+      Connection conn = DBConnect();
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM queue_main WHERE ID=?");
+      ps.setString(1, ID);
+      ps.executeUpdate();
+      ps.close();
 
-
-      /**
-       * stmt.close();
-       * При закрытии Statement автоматически закрываются
-       * все связанные с ним открытые объекты ResultSet
-       */
-      stmt.close();
-
-    } catch (SQLException e) {
+    } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
     }
   }
 
