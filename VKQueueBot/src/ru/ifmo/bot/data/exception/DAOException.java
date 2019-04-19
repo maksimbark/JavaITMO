@@ -1,7 +1,9 @@
-public class CustomException extends Exception {
+package ru.ifmo.bot.data.exception;
+
+public class DAOException extends Exception {
   String message;
 
-  CustomException(String str) {
+  public DAOException(String str) {
     message = str;
   }
 

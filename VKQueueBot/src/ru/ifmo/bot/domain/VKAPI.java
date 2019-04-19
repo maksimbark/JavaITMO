@@ -1,3 +1,5 @@
+package ru.ifmo.bot.domain;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -6,26 +8,29 @@ import java.net.URL;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import ru.ifmo.bot.config.PrivateDataStorage;
+import ru.ifmo.bot.data.exception.DAOException;
+import ru.ifmo.bot.domain.entities.Message;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import java.net.URLEncoder;
 
-public class VKAPI {
+class VKAPI {
 
   private final String baseURL = "https://api.vk.com/method/";
   private final String usersGetMethod = "users.get?";
   private final String messagesSendMethod = "messages.send?";
   private final String getLongPollMethod = "groups.getLongPollServer?";
-  private final String accessToken = GetPrivateData.accessData.get("accessToken");
-  private final String peerID = GetPrivateData.accessData.get("peer_id");
+  private final String accessToken = PrivateDataStorage.accessData.get("accessToken");
+  private final String peerID = PrivateDataStorage.accessData.get("peer_id");
 
   private String server;
   private String key;
   private String ts;
 
-  public VKAPI() {
+  VKAPI() {
 
     try {
       getLongPoll();
@@ -43,7 +48,7 @@ public class VKAPI {
     JSONObject jsonObj = (JSONObject) myParser;
     JSONObject responseVK = (JSONObject) jsonObj.get("error");
     if (responseVK != null) {
-      throw new CustomException("Vk returned ERROR: " + responseVK.get("error_msg"));
+      throw new DAOException("Vk returned ERROR: " + responseVK.get("error_msg"));
     }
     return jsonObj;
 
@@ -91,7 +96,7 @@ public class VKAPI {
 
   }
 
-  public ArrayList<Message> getNewMessages() throws Exception {
+  ArrayList<Message> getNewMessages() throws Exception {
 
     String url = server + "?act=a_check&key=" + key + "&ts=" + ts + "&wait=25";
     String response = sendGet(url);
@@ -120,7 +125,7 @@ public class VKAPI {
     return forReturn;
   }
 
-  public void sendCurrentQueue(List<String> text, String type) {
+  void sendCurrentQueue(List<String> text, String type) {
 
     String url = baseURL + usersGetMethod + "access_token=" + accessToken + "&v=5.92&user_ids=";
     for (String t : text) {
