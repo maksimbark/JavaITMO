@@ -9,9 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SqlBaseDAO {
-  private static final String SRV_URL = "jdbc:mysql://" + PrivateDataStorage.accessData.get("dataBaseAddr") + "/" +
-          PrivateDataStorage.accessData.get("dataBaseName") + "?serverTimezone=Europe/Moscow";
+
+  private static final String SRV_URL = String.format("jdbc:mysql://%s/%s?serverTimezone=Europe/Moscow",
+          PrivateDataStorage.accessData.get("dataBaseAddr"),PrivateDataStorage.accessData.get("dataBaseName"));
+
   private static final String SQL_GET = "SELECT * FROM queue_main";
+  private static final String SQL_INSERT = "INSERT INTO queue_main(ID) VALUES (?)";
+  private static final String SQL_DELETE = "DELETE FROM queue_main WHERE ID=?";
 
   private static Connection requestConnection() throws SQLException {
     return DriverManager.getConnection(
@@ -38,7 +42,7 @@ public class SqlBaseDAO {
 
   public void insertIntoDB(Person person) throws DAOException {
     try (Connection conn = requestConnection();
-         PreparedStatement ps = conn.prepareStatement("INSERT INTO queue_main(ID) VALUES (?)")) {
+         PreparedStatement ps = conn.prepareStatement(SQL_INSERT)) {
       ps.setLong(1, person.id);
       ps.executeUpdate();
     } catch (SQLException e) {
@@ -49,7 +53,7 @@ public class SqlBaseDAO {
 
   public void deleteFromDB(Person person) throws DAOException {
     try (Connection conn = requestConnection();
-         PreparedStatement ps = conn.prepareStatement("DELETE FROM queue_main WHERE ID=?")) {
+         PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
       ps.setLong(1, person.id);
       ps.executeUpdate();
 

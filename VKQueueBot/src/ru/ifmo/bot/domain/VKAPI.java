@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.jetbrains.annotations.NotNull;
+import com.sun.istack.internal.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import ru.ifmo.bot.config.PrivateDataStorage;
@@ -40,7 +40,6 @@ class VKAPI {
   }
 
   @NotNull
-
   private JSONObject JsonParse(String names) throws Exception {
     JSONParser parser = new JSONParser();
 
@@ -83,7 +82,8 @@ class VKAPI {
   }
 
   private void getLongPoll() throws Exception {
-    String url = baseURL + getLongPollMethod + "access_token=" + accessToken + "&group_id=61469205&v=5.92";
+    String url = String.format("%s%saccess_token=%s&group_id=61469205&v=5.92",baseURL,getLongPollMethod,accessToken);
+
     String response = sendGet(url);
     //parse JSON
     JSONObject jsonObj = JsonParse(response);
@@ -96,22 +96,24 @@ class VKAPI {
 
   }
 
-  ArrayList<Message> getNewMessages() throws Exception {
+  List<Message> getNewMessages() throws Exception {
 
-    String url = server + "?act=a_check&key=" + key + "&ts=" + ts + "&wait=25";
+    String url = String.format("%s?act=a_check&key=%s&ts=%s&wait=25",server,key,ts);
+
+
     String response = sendGet(url);
     JSONObject jsonObj = JsonParse(response);
     JSONObject responseVK = (JSONObject) jsonObj.get("failed");
     if (responseVK != null) {
       getLongPoll();
-      return new ArrayList<Message>();
+      return new ArrayList<>();
     }
     ts = (String) jsonObj.get("ts");
     System.out.println("new ts: " + ts);
 
     List<JSONObject> messages = (List<JSONObject>) jsonObj.get("updates");
     //myParser = parser.parse(();
-    ArrayList<Message> forReturn = new ArrayList<Message>();
+    List<Message> forReturn = new ArrayList<>();
 
     for (JSONObject currMsg : messages) {
       System.out.println(currMsg);
@@ -127,19 +129,24 @@ class VKAPI {
 
   void sendCurrentQueue(List<String> text, String type) {
 
-    String url = baseURL + usersGetMethod + "access_token=" + accessToken + "&v=5.92&user_ids=";
+    String url = String.format("%s%saccess_token=%s&v=5.92&user_ids=",baseURL,usersGetMethod,accessToken);
+
     for (String t : text) {
       url = url + t + ",";
     }
 
     try {
       String forSending = "";
-      if (type.equals("Show")) {
-        forSending = "Текущая очередь: \n";
-      } else if (type.equals("Add")) {
-        forSending = "Вы добавлены. Текущая очередь: \n";
-      } else if (type.equals("Del")) {
-        forSending = "Вы удалены. Текущая очередь: \n";
+      switch (type) {
+        case "Show":
+          forSending = "Текущая очередь: \n";
+          break;
+        case "Add":
+          forSending = "Вы добавлены. Текущая очередь: \n";
+          break;
+        case "Del":
+          forSending = "Вы удалены. Текущая очередь: \n";
+          break;
       }
 
       String names = sendGet(url);
@@ -147,10 +154,9 @@ class VKAPI {
       JSONObject jsonObj = JsonParse(names);
       List<JSONObject> messages = (List<JSONObject>) jsonObj.get("response");
       for (JSONObject m : messages) {
-        String name = (String) m.get("first_name");
-        forSending = forSending + (String) m.get("first_name") + " " + (String) m.get("last_name") + "\n";
+        forSending = forSending + m.get("first_name") + " " + m.get("last_name") + "\n";
       }
-      url = baseURL + messagesSendMethod + "access_token=" + accessToken + "&v=5.38&peer_id=" + peerID + "&message=" + URLEncoder.encode(forSending);
+      url = String.format("%s%saccess_token=%s&v=5.38&peer_id=%s&message=%s",baseURL,messagesSendMethod,accessToken,peerID,URLEncoder.encode(forSending));
       sendGet(url);
     } catch (Exception e) {
       e.printStackTrace();

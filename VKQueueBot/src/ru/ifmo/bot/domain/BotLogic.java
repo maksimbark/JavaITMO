@@ -4,7 +4,6 @@ import ru.ifmo.bot.data.SqlBaseDAO;
 import ru.ifmo.bot.domain.entities.Message;
 import ru.ifmo.bot.domain.entities.Person;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class BotLogic {
@@ -12,11 +11,10 @@ public class BotLogic {
     SqlBaseDAO Base = new SqlBaseDAO();
 
     VKAPI myVk = new VKAPI();
-    boolean running = true;
 
-    while (running) {
+    while (Running.running) {
       try {
-        ArrayList<Message> newMessages = myVk.getNewMessages();
+        List<Message> newMessages = myVk.getNewMessages();
         for (Message message : newMessages) {
           System.out.println(message.message);
           System.out.println(message.from);
